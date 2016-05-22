@@ -288,11 +288,13 @@ class Unicorn::HttpServer
         stop(false)
         break
       when :USR1 # rotate logs
+        logger.info "CALVIN: Received USR1 signal, calling reexec"
         logger.info "master reopening logs..."
         Unicorn::Util.reopen_logs
         logger.info "master done reopening logs"
         soft_kill_each_worker(:USR1)
       when :USR2 # exec binary, stay alive in case something went wrong
+        logger.info "CALVIN: Received USR2 signal, calling reexec"
         reexec
       when :WINCH
         if $stdin.tty?
@@ -405,6 +407,7 @@ class Unicorn::HttpServer
 
   # reexecutes the START_CTX with a new binary
   def reexec
+    logger.info "CALVIN: reexec: @reexec_pid = #{@reexec_pid.inspect}"
     if @reexec_pid > 0
       begin
         Process.kill(0, @reexec_pid)
@@ -415,6 +418,7 @@ class Unicorn::HttpServer
       end
     end
 
+    logger.info "CALVIN: reexec: pid = #{pid.inspect}"
     if pid
       old_pid = "#{pid}.oldbin"
       begin
